@@ -3,8 +3,14 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const prisma = new PrismaClient();
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params;
+// In Next.js 15, params is a Promise that must be awaited
+export async function PUT(
+  req: NextRequest, 
+  { params }: { params: Promise<{ id: string }> } 
+) {
+  // 1. Await the params to get the id
+  const { id } = await params;
+  
   const { quantityToAdd } = await req.json();
 
   if (typeof quantityToAdd !== 'number' || quantityToAdd <= 0) {
@@ -15,11 +21,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     // Find the inventory record by its associated product ID
     const inventoryToUpdate = await prisma.inventory.findUnique({
       where: {
-        // This assumes a one-to-one relationship where a product ID is unique to an inventory record.
+        // Using the awaited id here
         productId: id,
       },
       select: {
-        id: true, // Only select the inventory ID to reduce payload size
+        id: true, 
         quantity: true,
       }
     });
