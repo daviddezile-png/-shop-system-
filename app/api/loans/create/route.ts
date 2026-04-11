@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
       }),
     ]);
 
-    return NextResponse.json(newLoan, { status: 201 });
+    return NextResponse.json({ newLoan, updatedInventory }, { status: 201 });
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Failed to create loan" }, { status: 500 });
