@@ -1,4 +1,5 @@
 import { PrismaClient } from "@/lib/generated/prisma";
+import { promises } from "dns";
 import { NextResponse, NextRequest } from "next/server";
 
 const prisma = new PrismaClient();
@@ -6,9 +7,10 @@ const prisma = new PrismaClient();
 // Define the route handler for PUT requests (update a sale)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } } // Destructure params to get the id
+  { params }: { params: Promise<{ id: string }> } // Updated to Promise
 ) {
-  const { id } = params;
+  // Await the params
+  const { id } = await params;
   try {
     const { productId, quantity, paymentType } = await req.json();
 
@@ -43,9 +45,10 @@ export async function PUT(
 // Define the route handler for DELETE requests (delete a sale)
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } } // Destructure params to get the id
+  { params }: { params: Promise<{ id: string }> } // Updated to Promise
 ) {
-  const { id } = params;
+  // Await the params
+  const { id } = await params;
 
   try {
     await prisma.sale.delete({

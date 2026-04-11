@@ -7,9 +7,10 @@ const prisma = new PrismaClient();
 // Define the route handler for DELETE requests
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } } // Destructure params to get the id
+  { params }: { params: Promise<{ id: string }> } // Updated to Promise
 ) {
-  const { id } = params;
+  // Await the params
+  const { id } = await params;
 
   try {
     await prisma.user.delete({

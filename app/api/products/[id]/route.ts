@@ -6,10 +6,11 @@ const prisma = new PrismaClient();
 // Define the route handler for PUT requests (update)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } } // Destructure params to get the id
+  { params }: { params: Promise<{ id: string }> } // Updated to Promise
 ) {
-  
-const { id } = params;
+  // Await the params
+  const { id } = await params;
+
   try {
     const { name, buyingPrice, sellingPrice, category, scale } = await req.json();
     const updatedProduct = await prisma.product.update({
@@ -31,12 +32,12 @@ const { id } = params;
 }
 
 // Define the route handler for DELETE requests
-// DELETE a product by ID
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> } // Updated to Promise
 ) {
-  const { id } = params;
+  // Await the params
+  const { id } = await params;
 
   try {
     // Find the product and include its inventory
@@ -57,7 +58,7 @@ export async function DELETE(
       );
     }
 
-    //  Always delete inventory first (if it exists), then product
+    // Always delete inventory first (if it exists), then product
     await prisma.$transaction([
       prisma.inventory.deleteMany({
         where: { productId: id },
