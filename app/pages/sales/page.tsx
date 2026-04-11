@@ -260,7 +260,8 @@ export default function SalesDataTable() {
 }
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <h2 className='font-extrabold p-2 text-xl font-mono'>Sales</h2>
+      <div className="flex items-center pb-4">
         <Input
           placeholder="Filter product names..."
           value={(table.getColumn("productName")?.getFilterValue() as string) ?? ""}

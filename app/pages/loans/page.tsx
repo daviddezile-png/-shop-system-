@@ -374,7 +374,8 @@ export default function LoansPage() {
 }
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <h2 className='font-extrabold p-2 text-xl font-mono'>Loans</h2>
+      <div className="flex items-center pb-4">
         <Input
           placeholder="Filter customer name..."
           value={(table.getColumn("customerName")?.getFilterValue() as string) ?? ""}

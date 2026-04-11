@@ -2,7 +2,7 @@
 import SalesByProduct from '@/components/SalesByProduct'
 import SalesTrends from '@/components/SalesTrendLineChart'
 import { Card, CardAction, CardContent, CardDescription, CardTitle } from '@/components/ui/card'
-import { CreditCard, StoreIcon, Trash2, Wallet2 } from 'lucide-react'
+import { BadgeCheck, CreditCard, StoreIcon, Trash2, Wallet2 } from 'lucide-react'
 import React from 'react'
 import { toast } from 'sonner';
 import { useState, useEffect } from 'react'
@@ -12,7 +12,7 @@ const Dashboard = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [loans, setLoans] = useState<any[]>([]);
   const [total, setTotal] = useState<number>(0); // Ensure total is a number
-
+  const [soldProducts, setSoldProducts] = useState<any[]>([]);
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -57,9 +57,23 @@ const Dashboard = () => {
       }
     };
 
+    const fetchProductsSold = async () => {
+      try {
+        const res = await fetch('/api/soldProduct');
+        if (res.ok) {
+          const data = await res.json();
+          setSoldProducts(data.count);
+        }
+      } catch (error) {
+        console.error(error);
+        toast.error('Failed to fetch sold products');
+      }
+    }
+
     fetchProducts();
     fetchLoans();
     fetchTotalIncome();
+    fetchProductsSold();
   }, []);
 
   const totalProduct = products.length;
@@ -73,22 +87,23 @@ const Dashboard = () => {
 }
   return (
     <div className='w-full'>
+      <h2 className='font-extrabold p-2 text-xl font-mono'>Dashboard</h2>
       <div className='w-full flex flex-wrap '>
         <Card className='w-[25%] md:w-[50%] flex-1 bg-green-300  ' >
           <CardContent>
             <CardAction><StoreIcon /></CardAction>
             <CardTitle>{totalProduct}</CardTitle>
             <CardDescription>
-            Products Available
+            Registered Products
             </CardDescription>
           </CardContent>
         </Card>
         <Card className='w-[25%] md:w-[50%] flex-1 bg-lime-300'>
           <CardContent>
-            <CardAction><Trash2 /></CardAction>
-            <CardTitle>0</CardTitle>
+            <CardAction><BadgeCheck/></CardAction>
+            <CardTitle>{soldProducts}</CardTitle>
             <CardDescription>
-              Expired products
+            Product Sold ToDay
             </CardDescription>
           </CardContent>
         </Card>
@@ -97,7 +112,7 @@ const Dashboard = () => {
             <CardAction><CreditCard /></CardAction>
             <CardTitle>{totalLoans}</CardTitle>
             <CardDescription>
-              loans
+             All loans
             </CardDescription>
           </CardContent>
         </Card>
@@ -106,7 +121,7 @@ const Dashboard = () => {
             <CardAction><Wallet2 /></CardAction>
             <CardTitle>{Number(total).toLocaleString()}<span className='text-lg'>.Tsh</span></CardTitle>
             <CardDescription>
-              Daily income
+              Day's income
             </CardDescription>
           </CardContent>
         </Card>

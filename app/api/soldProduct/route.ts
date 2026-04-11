@@ -15,24 +15,23 @@ export async function GET() {
         },
       },
       _sum: {
-        totalPrice: true, // Sum the totalPrice field
+        quantity: true, 
       },
     });
 
-    const PaidLoan = await prisma.loan.aggregate({
+    const Loan = await prisma.loan.aggregate({
       where: {
         createdAt: { gte: startOfDay },
-        paymentStatus: "PAID"
       },
       _sum: {
-        loanQuantity: true, // Sum the totalPrice field
+        quantity: true, 
       },
     });
-    // Extract the total from the result, handling null case
-    const total1 = sales._sum.totalPrice || 0;
-    const total2 = PaidLoan._sum.loanQuantity || 0;
-    const total = total1 + total2;
-    return NextResponse.json({ total });
+
+    const total1 = sales._sum.quantity || 0;
+    const total2 = Loan._sum.quantity || 0;
+    const count = total1 + total2;
+    return NextResponse.json({ count });
   } catch (err) {
     console.error("fetching error:", err);
     return NextResponse.json({ error: "Failed to track daily income" }, { status: 500 });

@@ -451,7 +451,8 @@ export default function DataTableDemo() {
 }
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <h2 className='font-extrabold p-2 text-xl font-mono'>Products</h2>
+      <div className="flex items-center pb-4">
         <Input
           placeholder="Filter names..."
           value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}

@@ -78,8 +78,8 @@ const UpdateStockButton = ({ productId, currentQuantity, onUpdate }:{productId:s
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <Button onClick={() => setIsDialogOpen(true)} variants="default">
-        <PenBox className='text-lime-400'/> Update Stock
+      <Button onClick={() => setIsDialogOpen(true)}  size="sm">
+        <PenBox className='text-lime-400'/> Add Stock
       </Button>
       <DialogContent>
         <DialogHeader>
@@ -193,6 +193,7 @@ export default function InventoryDataTable() {
 
   return (
     <div className="w-full">
+      <h2 className='font-extrabold py-3 p-1 text-xl font-mono'>Inventory</h2>
       <Input
         placeholder="Filter products..."
         value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
