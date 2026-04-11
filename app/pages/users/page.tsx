@@ -316,10 +316,9 @@ const [loading,setLoading] = React.useState(true);
                   {/* The corrected Select component with id and name */}
                   <Select
                     name="role"
-                    id="role"
                     onValueChange={(value) => setNewUser({ ...newUser, role: value })}
                   >
-                    <SelectTrigger className="w-[190px]">
+                    <SelectTrigger id="role" className="w-[190px]">
                       <SelectValue placeholder="select User Role" />
                     </SelectTrigger>
                     <SelectContent>
