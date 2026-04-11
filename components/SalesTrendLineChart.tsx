@@ -18,7 +18,7 @@ import {
 import Loader from '@/components/Loader'
 
 export default function WeeklySalesTrends() {
-  const [monthDate, setMonthDate] = useState<Date | null>(new Date());
+  const [monthDate, setMonthDate] = useState<Date | undefined>(new Date());
   const [data, setData] = useState<{ weekLabel: string; income: number }[]>([]);
   const [loading, setLoading] = useState(false);
 
