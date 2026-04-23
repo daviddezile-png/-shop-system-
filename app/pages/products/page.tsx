@@ -29,10 +29,11 @@ import {
   ChevronDown,
   MoreHorizontal,
   PlusCircle,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import Loader from "@/components/Loader";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -53,6 +54,150 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 
+// Edit Product Button Component
+const EditProductButton = ({
+  product,
+  onUpdate,
+}: {
+  product: Product;
+  onUpdate: () => void;
+}) => {
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [editedProduct, setEditedProduct] = React.useState({
+    name: product.name,
+    buyingPrice: product.buyingPrice.toString(),
+    sellingPrice: product.sellingPrice.toString(),
+    category: product.category,
+    scale: product.scale,
+  });
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const handleUpdateProduct = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/products/${product.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...editedProduct,
+          buyingPrice: parseFloat(editedProduct.buyingPrice),
+          sellingPrice: parseFloat(editedProduct.sellingPrice),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update product");
+      }
+
+      toast.success("Product updated successfully!");
+      setIsDialogOpen(false);
+      onUpdate();
+    } catch (error) {
+      toast.error("Failed to update product.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Button onClick={() => setIsDialogOpen(true)} variant="outline" size="sm">
+        <Pencil className="text-blue-400" /> Edit
+      </Button>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Edit Product</DialogTitle>
+          <DialogDescription>
+            Make changes to your product here. Click save when you&apos;re done.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="name" className="text-right">
+              Name
+            </Label>
+            <Input
+              id="name"
+              value={editedProduct.name}
+              onChange={(e) =>
+                setEditedProduct({ ...editedProduct, name: e.target.value })
+              }
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="buyingPrice" className="text-right">
+              Buying Price
+            </Label>
+            <Input
+              id="buyingPrice"
+              type="text"
+              value={editedProduct.buyingPrice}
+              onChange={(e) =>
+                setEditedProduct({
+                  ...editedProduct,
+                  buyingPrice: e.target.value,
+                })
+              }
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="sellingPrice" className="text-right">
+              Selling Price
+            </Label>
+            <Input
+              id="sellingPrice"
+              type="text"
+              value={editedProduct.sellingPrice}
+              onChange={(e) =>
+                setEditedProduct({
+                  ...editedProduct,
+                  sellingPrice: e.target.value,
+                })
+              }
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="category" className="text-right">
+              Category
+            </Label>
+            <Input
+              id="category"
+              value={editedProduct.category}
+              onChange={(e) =>
+                setEditedProduct({ ...editedProduct, category: e.target.value })
+              }
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="scale" className="text-right">
+              Scale
+            </Label>
+            <Input
+              id="scale"
+              value={editedProduct.scale}
+              onChange={(e) =>
+                setEditedProduct({ ...editedProduct, scale: e.target.value })
+              }
+              className="col-span-3"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={handleUpdateProduct} disabled={isLoading}>
+            {isLoading ? <Loader /> : "Save Changes"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 // Product type and data (as defined above)
 export type Product = {
   id: string;
@@ -61,12 +206,13 @@ export type Product = {
   sellingPrice: number;
   category: string;
   scale: string;
-
-  // Add other relevant properties
 };
 
-// Columns definition (as defined above)
-export const columns: ColumnDef<Product>[] = [
+// Columns definition function
+const getColumns = (
+  onRefresh: () => void,
+  handleDeleteProduct: (id: string) => void,
+): ColumnDef<Product>[] => [
   {
     id: "select",
     enableSorting: false,
@@ -127,189 +273,17 @@ export const columns: ColumnDef<Product>[] = [
     enableHiding: false,
     cell: ({ row }) => {
       const product = row.original;
-      const [open, setOpen] = React.useState(false);
-      const [products, setProducts] = React.useState<Product[]>([]);
-
-      const handleDeleteProduct = async (id: string) => {
-        try {
-          const response = await fetch(`/api/products/${id}`, {
-            method: "DELETE",
-          });
-
-          if (response.ok) {
-            //  Remove product from state instantly
-            setProducts((prev) => prev.filter((p) => p.id !== id));
-
-            toast.success("Product deleted successfully");
-          } else {
-            const errorData = await response.json();
-            toast.info(errorData.error || "Failed to delete product");
-          }
-        } catch (error: any) {
-          console.error(error);
-          toast.error("Failed to delete product");
-        }
-      };
       return (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
-                <MoreHorizontal />
-              </Button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setOpen(true)}>
-                Edit Product
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleDeleteProduct(product.id)}>
-                Delete Product
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Dialog is OUTSIDE the dropdown */}
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>Edit product</DialogTitle>
-                <DialogDescription>
-                  Make changes to your product here. Click save when you're
-                  done.
-                </DialogDescription>
-              </DialogHeader>
-
-              <form
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  const updatedProduct = {
-                    id: product.id,
-                    name: formData.get("name") as string,
-                    buyingPrice: Number(formData.get("buyingPrice")),
-                    sellingPrice: Number(formData.get("sellingPrice")),
-                    scale: formData.get("scale") as string,
-                    category: formData.get("category") as string,
-                  };
-
-                  console.log("Updated Product:", updatedProduct);
-
-                  try {
-                    const response = await fetch(
-                      `/api/products/${product.id}`,
-                      {
-                        method: "PUT",
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify(updatedProduct),
-                      },
-                    );
-
-                    if (response.ok) {
-                      toast.success("Product updated successfully");
-                      setProducts(
-                        products.map((product) =>
-                          product.id === updatedProduct.id
-                            ? updatedProduct
-                            : product,
-                        ),
-                      ); // Live update
-                      setOpen(false);
-
-                      // Refresh product list
-                      const fetchProducts = async () => {
-                        try {
-                          const response = await fetch("/api/products/list");
-                          if (response.ok) {
-                            const data = await response.json();
-                            setProducts(data);
-                          } else {
-                            toast.error("Failed to fetch products");
-                          }
-                        } catch (error) {
-                          console.error(error);
-                          toast.error("Failed to fetch products");
-                        }
-                      };
-                      fetchProducts();
-                    } else {
-                      toast.error("Failed to update product");
-                    }
-                  } catch (error) {
-                    console.error("Error updating product:", error);
-                    toast.error("Failed to update product");
-                  }
-                }}
-              >
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                      Name
-                    </Label>
-                    <Input
-                      id="name"
-                      name="name"
-                      defaultValue={product.name}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="buyingPrice" className="text-right">
-                      Buying price
-                    </Label>
-                    <Input
-                      id="buyingPrice"
-                      name="buyingPrice"
-                      defaultValue={product.buyingPrice}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="sellingPrice" className="text-right">
-                      Selling price
-                    </Label>
-                    <Input
-                      id="sellingPrice"
-                      name="sellingPrice"
-                      defaultValue={product.sellingPrice}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="scale" className="text-right">
-                      Scale
-                    </Label>
-                    <Input
-                      id="scale"
-                      name="scale"
-                      defaultValue={product.scale}
-                      className="col-span-3"
-                    />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="category" className="text-right">
-                      category
-                    </Label>
-                    <Input
-                      id="category"
-                      name="category"
-                      defaultValue={product.category}
-                      className="col-span-3"
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="submit">Save changes</Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </>
+        <div className="flex items-center gap-2">
+          <EditProductButton product={product} onUpdate={onRefresh} />
+          <Button
+            variant="outline"
+            onClick={() => handleDeleteProduct(product.id)}
+            className="text-red-500 hover:text-red-700"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
       );
     },
   },
@@ -361,9 +335,27 @@ export default function DataTableDemo() {
     fetchProducts();
   }, []);
 
+  const handleDeleteProduct = async (id: string) => {
+    try {
+      const response = await fetch(`/api/products/${id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        toast.success("Product deleted successfully");
+        fetchProducts();
+      } else {
+        toast.error("Failed to delete product");
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      toast.error("Failed to delete product");
+    }
+  };
+
   const table = useReactTable({
-    data: products, // Use productData here
-    columns,
+    data: products,
+    columns: getColumns(fetchProducts, handleDeleteProduct),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -440,27 +432,27 @@ export default function DataTableDemo() {
     <div className="w-full">
       <h2 className="font-extrabold p-2 text-xl font-mono">Products</h2>
       <div className="flex  flex-wrap items-center pb-4">
-      <div className=" flex flex-row">
+        <div className=" flex flex-row">
           <Input
-          placeholder="Filter names..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className=" p-2"
-        />
-        <Input
-          placeholder="Filter category..."
-          value={
-            (table.getColumn("category")?.getFilterValue() as string) ?? ""
-          }
-          onChange={(event) =>
-            table.getColumn("category")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm ml-2"
-        />
-     </div>
-        
+            placeholder="Filter names..."
+            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("name")?.setFilterValue(event.target.value)
+            }
+            className=" p-2"
+          />
+          <Input
+            placeholder="Filter category..."
+            value={
+              (table.getColumn("category")?.getFilterValue() as string) ?? ""
+            }
+            onChange={(event) =>
+              table.getColumn("category")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm ml-2"
+          />
+        </div>
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           {/*  Trigger opens the dialog */}
           <DialogTrigger asChild>

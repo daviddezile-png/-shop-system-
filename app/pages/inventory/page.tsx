@@ -32,7 +32,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Loader from "@/components/Loader";
-import { MinusCircle, PenBox } from "lucide-react";
+import { MinusCircle, PenBox, PlusCircle } from "lucide-react";
 
 // Define the Product type with `availableQuantity`
 export type Product = {
@@ -87,7 +87,7 @@ const UpdateStockButton = ({
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <Button onClick={() => setIsDialogOpen(true)} size="sm">
-        <PenBox className="blue-lime-800" /> Add Stock
+        <PlusCircle className="text-lime-800" /> Add Stock
       </Button>
       <DialogContent>
         <DialogHeader>
@@ -124,13 +124,9 @@ const EditInventoryButton = ({
   onUpdate: () => void;
 }) => {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
-  const [editedProduct, setEditedProduct] = React.useState({
-    name: product?.name || "",
-    buyingPrice: product?.buyingPrice?.toString() || "",
-    sellingPrice: product?.sellingPrice?.toString() || "",
-    category: product?.category || "",
-    scale: product?.scale || "",
-  });
+  const [newQuantity, setNewQuantity] = React.useState(
+    product.availableQuantity,
+  );
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleEditProduct = async () => {
@@ -142,23 +138,20 @@ const EditInventoryButton = ({
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          name: editedProduct.name,
-          buyingPrice: parseFloat(editedProduct.buyingPrice),
-          sellingPrice: parseFloat(editedProduct.sellingPrice),
-          category: editedProduct.category,
-          scale: editedProduct.scale,
+          quantity: parseInt(newQuantity.toString()),
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to update product details.");
+        throw new Error("Failed to update inventory quantity.");
       }
 
-      toast.success("Product details updated successfully!");
+      toast.success("Inventory quantity updated successfully!");
       setIsDialogOpen(false);
+      setNewQuantity(product.availableQuantity);
       onUpdate(); // Call the callback to trigger a data re-fetch
     } catch (error) {
-      toast.error("Failed to update product details.");
+      toast.error("Failed to update inventory quantity.");
     } finally {
       setIsLoading(false);
     }
@@ -171,89 +164,34 @@ const EditInventoryButton = ({
       </Button>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit Product</DialogTitle>
+          <DialogTitle>Update Inventory</DialogTitle>
           <DialogDescription>
-            Make changes to your product here. Click save when you're done.
+            Set the new quantity for this product. Current quantity:{" "}
+            {product.availableQuantity}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              Name
+            <Label htmlFor="newQuantity" className="text-right">
+              New Quantity
             </Label>
             <Input
-              id="name"
-              value={editedProduct.name}
-              onChange={(e) =>
-                setEditedProduct({ ...editedProduct, name: e.target.value })
-              }
+              id="newQuantity"
+              type="number"
+              placeholder="Enter new quantity"
+              value={newQuantity}
+              onChange={(e) => setNewQuantity(parseInt(e.target.value) || 0)}
               className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="buyingPrice" className="text-right">
-              Buying Price
-            </Label>
-            <Input
-              id="buyingPrice"
-              type="text"
-              value={editedProduct.buyingPrice}
-              onChange={(e) =>
-                setEditedProduct({
-                  ...editedProduct,
-                  buyingPrice: e.target.value,
-                })
-              }
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="sellingPrice" className="text-right">
-              Selling Price
-            </Label>
-            <Input
-              id="sellingPrice"
-              type="text"
-              value={editedProduct.sellingPrice}
-              onChange={(e) =>
-                setEditedProduct({
-                  ...editedProduct,
-                  sellingPrice: e.target.value,
-                })
-              }
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="category" className="text-right">
-              Category
-            </Label>
-            <Input
-              id="category"
-              value={editedProduct.category}
-              onChange={(e) =>
-                setEditedProduct({ ...editedProduct, category: e.target.value })
-              }
-              className="col-span-3"
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="scale" className="text-right">
-              Scale
-            </Label>
-            <Input
-              id="scale"
-              value={editedProduct.scale}
-              onChange={(e) =>
-                setEditedProduct({ ...editedProduct, scale: e.target.value })
-              }
-              className="col-span-3"
+              min="0"
             />
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleEditProduct} disabled={isLoading}>
-            {isLoading ? <Loader /> : "Save Changes"}
+          <Button
+            onClick={handleEditProduct}
+            disabled={isLoading || newQuantity < 0}
+          >
+            {isLoading ? <Loader /> : "Update Quantity"}
           </Button>
         </DialogFooter>
       </DialogContent>

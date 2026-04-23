@@ -75,10 +75,10 @@ export async function DELETE(
       { message: "Product and inventory deleted successfully." },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Delete error:", error);
 
-    if (error.code === "P2003") {
+    if (error && typeof error === 'object' && 'code' in error && error.code === "P2003") {
       // Foreign key violation
       return NextResponse.json(
         { error: "Cannot delete product. It is still referenced in other records." },

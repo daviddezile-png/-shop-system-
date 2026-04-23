@@ -11,9 +11,9 @@ export async function PUT(
   // 1. Await the params to get the id
   const { id } = await params;
   
-  const { quantityToAdd } = await req.json();
+  const { quantity } = await req.json();
 
-  if (typeof quantityToAdd !== 'number' || quantityToAdd <= 0) {
+  if (typeof quantity !== 'number' || quantity < 0) {
     return NextResponse.json({ error: 'Invalid quantity' }, { status: 400 });
   }
 
@@ -40,9 +40,7 @@ export async function PUT(
         id: inventoryToUpdate.id,
       },
       data: {
-        quantity: {
-          increment: quantityToAdd,
-        },
+        quantity: quantity, // Set the quantity directly instead of incrementing
       },
     });
 

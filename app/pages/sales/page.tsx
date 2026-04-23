@@ -131,7 +131,7 @@ const DeleteSaleButton = ({
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <Button
         onClick={() => setIsDialogOpen(true)}
-        variant="ghost"
+        variant="outline"
         size="icon"
         className="text-red-500 hover:text-red-700"
       >
@@ -218,7 +218,7 @@ const UpdateSaleButton = ({
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <Button
         onClick={() => setIsDialogOpen(true)}
-        variant="ghost"
+        variant="outline"
         size="icon"
         className="text-blue-500 hover:text-blue-700"
       >
@@ -364,31 +364,18 @@ const getColumns = (
     accessorKey: "createdAt",
     header: "Date",
     cell: ({ row }) => {
-      const [formattedDate, setFormattedDate] = React.useState("");
-      const [isClient, setIsClient] = React.useState(false);
-
-      React.useEffect(() => {
-        setIsClient(true);
-        try {
-          const date = new Date(row.original.createdAt);
-          // Check if the date is valid
-          if (isNaN(date.getTime())) {
-            // For invalid dates, show the raw string or a fallback
-            setFormattedDate(row.original.createdAt || "No Date");
-          } else {
-            setFormattedDate(format(date, "MMM dd, yyyy 'at' h:mm a"));
-          }
-        } catch (error) {
-          // For any errors, show the original string
-          setFormattedDate(row.original.createdAt || "Date Unavailable");
+      try {
+        const date = new Date(row.original.createdAt);
+        // Check if the date is valid
+        if (isNaN(date.getTime())) {
+          // For invalid dates, show the raw string or a fallback
+          return <div>{row.original.createdAt || "No Date"}</div>;
+        } else {
+          return <div>{format(date, "MMM dd, yyyy 'at' h:mm a")}</div>;
         }
-      }, [row.original.createdAt]);
-
-      if (!isClient) {
-        return <span>Loading...</span>;
+      } catch (error) {
+        return <div>{row.original.createdAt || "No Date"}</div>;
       }
-
-      return <span>{formattedDate}</span>;
     },
   },
   {

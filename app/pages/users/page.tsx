@@ -20,12 +20,11 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
-  useReactTable,
   VisibilityState,
+  useReactTable,
 } from "@tanstack/react-table";
-import { ChevronDown, MinusCircle, PlusCircle, Pencil, Trash, TriangleDashed, Trash2 } from "lucide-react";
+import { ChevronDown, PlusCircle, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -204,7 +203,10 @@ export type user = {
 };
 
 // Columns definition - function to get columns with refresh callback
-const getColumns = (onRefresh: () => void): ColumnDef<user>[] => [
+const getColumns = (
+  onRefresh: () => void,
+  onDeleteUser: (id: string) => void,
+): ColumnDef<user>[] => [
   {
     accessorKey: "name",
     header: "Name",
@@ -231,44 +233,11 @@ const getColumns = (onRefresh: () => void): ColumnDef<user>[] => [
     enableHiding: false,
     cell: ({ row }) => {
       const user = row.original;
-      const [open, setOpen] = React.useState(false);
-      const [users, setUsers] = React.useState<user[]>([]);
-      const handleDeleteUser = async (id: string) => {
-        try {
-          const response = await fetch(`/api/users/${id}`, {
-            method: "DELETE",
-          });
-          if (response.ok) {
-            setOpen(false);
-            const fetchUsers = async () => {
-              try {
-                const response = await fetch("/api/users/list");
-                if (response.ok) {
-                  const data = await response.json();
-                  setUsers(data);
-                } else {
-                  toast.error("Failed to fetch users");
-                }
-              } catch (error) {
-                console.error(error);
-                toast.error("Failed to fetch users");
-              }
-            };
-            fetchUsers();
-            toast.success("User deleted successfully");
-          } else {
-            toast.error("Failed to delete user");
-          }
-        } catch (error) {
-          console.error(error);
-          toast.error("Failed to delete user");
-        }
-      };
       return (
         <div className="flex items-center gap-2">
           <EditUserButton user={user} onUpdate={onRefresh} />
           <Button variant="outline" onClick={() => handleDeleteUser(user.id)}>
-            <Trash2 className="text-red-700"/>
+            <Trash2 className="text-red-700" />
           </Button>
         </div>
       );
@@ -312,6 +281,23 @@ export default function DataTableDemo() {
     }
   };
 
+  const handleDeleteUser = async (id: string) => {
+    try {
+      const response = await fetch(`/api/users/${id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        toast.success("User deleted successfully!");
+        refreshUsers();
+      } else {
+        toast.error("Failed to delete user.");
+      }
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      toast.error("Failed to delete user.");
+    }
+  };
+
   React.useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -333,11 +319,11 @@ export default function DataTableDemo() {
       }
     };
     fetchProducts();
-  }, []);
+  }, [users.length]);
 
   const table = useReactTable({
     data: users,
-    columns: getColumns(refreshUsers),
+    columns: getColumns(refreshUsers, handleDeleteUser),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -412,26 +398,26 @@ export default function DataTableDemo() {
       <h2 className="font-extrabold p-2 text-xl font-mono">Users</h2>
       <div className="flex  flex-wrap items-center pb-4">
         <div className="flex flex-row">
-           <Input
-          placeholder="Filter names..."
-          value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn("name")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm p-2"
-        />
-        <Input
-          placeholder="Filter Username..."
-          value={
-            (table.getColumn("username")?.getFilterValue() as string) ?? ""
-          }
-          onChange={(event) =>
-            table.getColumn("username")?.setFilterValue(event.target.value)
-          }
-          className="max-w-sm ml-2"
-        />
+          <Input
+            placeholder="Filter names..."
+            value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+            onChange={(event) =>
+              table.getColumn("name")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm p-2"
+          />
+          <Input
+            placeholder="Filter Username..."
+            value={
+              (table.getColumn("username")?.getFilterValue() as string) ?? ""
+            }
+            onChange={(event) =>
+              table.getColumn("username")?.setFilterValue(event.target.value)
+            }
+            className="max-w-sm ml-2"
+          />
         </div>
-       
+
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="m-5 ">

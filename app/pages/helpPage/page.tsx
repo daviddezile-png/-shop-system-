@@ -240,7 +240,7 @@ export default function HelpPage() {
               <li className="flex items-start gap-2">
                 <span className="text-green-500 mt-1">•</span>
                 <span>
-                  <strong>Can't login?</strong> Verify credentials and
+                  <strong>Can&apos;t login?</strong> Verify credentials and
                   connection
                 </span>
               </li>
@@ -255,23 +255,23 @@ export default function HelpPage() {
         </div>
 
         {/* Additional Help Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white">
+        <div className="bg-gradient-to-r from-blue-950 to-purple-600 rounded-xl p-8 text-white">
           <div className="text-center space-y-4">
             <h2 className="text-2xl font-bold">Need More Help?</h2>
             <p className="text-blue-100 max-w-2xl mx-auto">
               Our support team is here to assist you with any questions or
-              issues you might have. Don't hesitate to reach out!
+              issues you might have. Don&apos;t hesitate to reach out!
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <div className="flex items-center gap-2 bg-white/20 rounded-lg px-4 py-2">
+            <div className="flex flex-row flex-wrap gap-4 justify-center items-center">
+              <div className="w-[300px] justify-center  flex items-center gap-2 bg-white/20 rounded-lg px-4 py-2">
                 <Phone className="w-5 h-5" />
-                <span>+255 123 456 789</span>
+                <span>+255 758 012 513</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/20 rounded-lg px-4 py-2">
+              <div className="w-[300px] justify-center flex items-center gap-2 bg-white/20 rounded-lg px-4 py-2">
                 <Mail className="w-5 h-5" />
                 <span>support@shopmanagement.com</span>
               </div>
-              <div className="flex items-center gap-2 bg-white/20 rounded-lg px-4 py-2">
+              <div className="w-[300px] justify-center flex items-center gap-2 bg-white/20 rounded-lg px-4 py-2">
                 <MessageSquare className="w-5 h-5" />
                 <span>Live Chat Available</span>
               </div>

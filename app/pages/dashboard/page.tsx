@@ -11,6 +11,7 @@ import {
 import {
   BadgeCheck,
   CreditCard,
+  Loader2,
   StoreIcon,
   Trash2,
   Wallet2,
@@ -28,86 +29,110 @@ import {
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import { format } from "date-fns";
+import { useCallback } from "react";
+
+// Define types for dashboard data
+interface DashboardProduct {
+  id: string;
+  name: string;
+  availableQuantity: number;
+  scale: string;
+}
+
+interface DashboardLoan {
+  id: string;
+  customerName: string;
+  quantity: number;
+  loanQuantity: number;
+  paymentType: string;
+  paymentStatus: string;
+  createdAt: string;
+}
+
+interface DashboardSale {
+  id: string;
+  productName: string;
+  quantity: number;
+  totalPrice: number;
+  paymentType: string;
+  createdAt: string;
+}
+
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState<any[]>([]);
-  const [loans, setLoans] = useState<any[]>([]);
-  const [total, setTotal] = useState<number>(0); // Ensure total is a number
-  const [soldProducts, setSoldProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<DashboardProduct[]>([]);
+  const [loans, setLoans] = useState<DashboardLoan[]>([]);
+  const [total, setTotal] = useState<number>(0);
+  const [soldProducts, setSoldProducts] = useState<DashboardSale[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Date filter state
-  const [startDate, setStartDate] = useState<Date | undefined>(
-    new Date(new Date().setDate(new Date().getDate() - 30)), // 30 days ago
-  );
-  const [endDate, setEndDate] = useState<Date | undefined>(
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
     new Date(), // Today
   );
   const [dateFilterOpen, setDateFilterOpen] = useState(false);
 
   // Refresh function
-  const refreshData = async () => {
+  const refreshData = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      const startOfDay = startDate
-        ? new Date(startDate).setHours(0, 0, 0, 0)
-        : new Date(new Date().setDate(new Date().getDate() - 30)).setHours(
-            0,
-            0,
-            0,
-            0,
-          );
-      const endOfDay = endDate
-        ? new Date(endDate).setHours(23, 59, 59, 999)
+      const startOfDay = selectedDate
+        ? new Date(selectedDate).setHours(0, 0, 0, 0)
+        : new Date().setHours(0, 0, 0, 0);
+      const endOfDay = selectedDate
+        ? new Date(selectedDate).setHours(23, 59, 59, 999)
         : new Date().setHours(23, 59, 59, 999);
-
-      // Convert to proper Date objects for toISOString
       const startISO = new Date(startOfDay).toISOString();
       const endISO = new Date(endOfDay).toISOString();
 
-      // Fetch data in parallel for better performance
-      const [productsRes, loansRes, incomeRes, soldRes] = await Promise.all([
-        fetch("/api/products/list"),
-        fetch(`/api/loans/list?startDate=${startISO}&endDate=${endISO}`),
-        fetch(`/api/totalIncome?startDate=${startISO}&endDate=${endISO}`),
-        fetch(`/api/soldProduct?startDate=${startISO}&endDate=${endISO}`),
-      ]);
+      // Fetch data for the selected date range
+      const productsResponse = await fetch(
+        `/api/products/list?startDate=${startISO}&endDate=${endISO}`,
+      );
+      const loansResponse = await fetch(
+        `/api/loans/list?startDate=${startISO}&endDate=${endISO}`,
+      );
+      const incomeResponse = await fetch(
+        `/api/totalIncome?startDate=${startISO}&endDate=${endISO}`,
+      );
+      const soldProductResponse = await fetch(
+        `/api/soldProduct?startDate=${startISO}&endDate=${endISO}`,
+      );
 
-      // Update state with new data
-      if (productsRes.ok) {
-        const productsData = await productsRes.json();
+      if (
+        productsResponse.ok &&
+        loansResponse.ok &&
+        incomeResponse.ok &&
+        soldProductResponse.ok
+      ) {
+        const productsData = await productsResponse.json();
+        const loansData = await loansResponse.json();
+        const incomeData = await incomeResponse.json();
+        const soldProductData = await soldProductResponse.json();
+
         setProducts(productsData);
-      }
-
-      if (loansRes.ok) {
-        const loansData = await loansRes.json();
         setLoans(loansData);
-      }
-
-      if (incomeRes.ok) {
-        const incomeData = await incomeRes.json();
         setTotal(incomeData.total);
-      }
-
-      if (soldRes.ok) {
-        const soldData = await soldRes.json();
-        setSoldProducts(soldData.count);
+        setSoldProducts(soldProductData);
+      } else {
+        toast.error("Failed to refresh data");
       }
     } catch (error) {
       console.error(error);
       toast.error("Failed to refresh data");
     } finally {
       setIsRefreshing(false);
+      setLoading(false); // Set initial loading to false after first load
     }
-  };
+  }, [selectedDate]);
 
   useEffect(() => {
     refreshData();
-  }, []);
+  }, [refreshData]);
 
   useEffect(() => {
     refreshData();
-  }, [startDate, endDate]);
+  }, [selectedDate, refreshData]);
 
   const totalProduct = products.length;
   const totalLoans = loans.length;
@@ -128,32 +153,21 @@ const Dashboard = () => {
           <PopoverTrigger asChild>
             <Button variant="outline" className="w-full sm:w-auto">
               <Calendar className="mr-2 h-4 w-4" />
-              {startDate && endDate
-                ? `${format(startDate, "MMM dd")} - ${format(endDate, "MMM dd")}`
-                : "Filter by Date Range"}
+              {selectedDate
+                ? format(selectedDate, "MMM dd, yyyy")
+                : "Select Date"}
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-4" align="end">
             <div className="grid gap-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">
-                  Start Date
+                  Select Date
                 </label>
                 <CalendarComponent
                   mode="single"
-                  selected={startDate}
-                  onSelect={setStartDate}
-                  className="rounded-md"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  End Date
-                </label>
-                <CalendarComponent
-                  mode="single"
-                  selected={endDate}
-                  onSelect={setEndDate}
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
                   className="rounded-md"
                 />
               </div>
@@ -162,14 +176,11 @@ const Dashboard = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    setStartDate(
-                      new Date(new Date().setDate(new Date().getDate() - 30)),
-                    );
-                    setEndDate(new Date());
+                    setSelectedDate(new Date());
                     setDateFilterOpen(false);
                   }}
                 >
-                  Last 30 Days
+                  Today
                 </Button>
                 <Button size="sm" onClick={() => setDateFilterOpen(false)}>
                   Apply
@@ -225,7 +236,7 @@ const Dashboard = () => {
                 )}
               </CardAction>
               <CardTitle className="text-2xl sm:text-3xl">
-                {soldProducts}
+                {soldProducts.length}
               </CardTitle>
               <CardDescription className="text-sm text-lime-100">
                 Products Sold

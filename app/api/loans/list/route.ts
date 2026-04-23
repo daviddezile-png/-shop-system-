@@ -9,7 +9,12 @@ export async function GET(req: NextRequest) {
     const startDate = url.searchParams.get("startDate");
     const endDate = url.searchParams.get("endDate");
 
-    const whereClause: any = {};
+    const whereClause: {
+      createdAt?: {
+        gte?: Date;
+        lte?: Date;
+      };
+    } = {};
     
     if (startDate && endDate) {
       const start = new Date(startDate);

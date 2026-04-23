@@ -21,18 +21,15 @@ export async function PUT(
       productId 
     } = await req.json();
 
-    const updateData: any = {};
-    
-    if (paymentStatus !== undefined) updateData.paymentStatus = paymentStatus;
-    if (customerName !== undefined) updateData.customerName = customerName;
-    if (phone !== undefined) updateData.phone = phone;
-    if (quantity !== undefined) updateData.quantity = parseInt(quantity);
-    if (paymentType !== undefined) updateData.paymentType = paymentType;
-    if (productId !== undefined) updateData.productId = productId;
-
     const updatedLoan = await prisma.loan.update({
       where: { id },
-      data: updateData,
+      data: {
+        ...(paymentStatus !== undefined && { paymentStatus }),
+        ...(customerName !== undefined && { customerName }),
+        ...(phone !== undefined && { phone }),
+        ...(quantity !== undefined && { quantity: parseInt(quantity) }),
+        ...(paymentType !== undefined && { paymentType }),
+      },
     });
 
     return NextResponse.json(updatedLoan, { status: 200 });

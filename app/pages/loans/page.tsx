@@ -462,31 +462,18 @@ export default function LoansPage() {
       accessorKey: "createdAt",
       header: "Created At",
       cell: ({ row }) => {
-        const [formattedDate, setFormattedDate] = React.useState("");
-        const [isClient, setIsClient] = React.useState(false);
-
-        React.useEffect(() => {
-          setIsClient(true);
-          try {
-            const date = new Date(row.original.createdAt);
-            // Check if the date is valid
-            if (isNaN(date.getTime())) {
-              // For invalid dates, show the raw string or a fallback
-              setFormattedDate(row.original.createdAt || "No Date");
-            } else {
-              setFormattedDate(format(date, "MMM dd, yyyy 'at' h:mm a"));
-            }
-          } catch (error) {
-            // For any errors, show the original string
-            setFormattedDate(row.original.createdAt || "Date Unavailable");
+        try {
+          const date = new Date(row.original.createdAt);
+          // Check if the date is valid
+          if (isNaN(date.getTime())) {
+            // For invalid dates, show the raw string or a fallback
+            return <div>{row.original.createdAt || "No Date"}</div>;
+          } else {
+            return <div>{format(date, "MMM dd, yyyy 'at' h:mm a")}</div>;
           }
-        }, [row.original.createdAt]);
-
-        if (!isClient) {
-          return <span>Loading...</span>;
+        } catch (error) {
+          return <div>{row.original.createdAt || "No Date"}</div>;
         }
-
-        return <span>{formattedDate}</span>;
       },
     },
     {

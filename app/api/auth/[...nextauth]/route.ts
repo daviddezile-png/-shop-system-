@@ -41,16 +41,18 @@ const handler = NextAuth({
     maxAge:30*60, // 30 minutes
   },
   callbacks: {
-    async jwt({ token, user }:{token:any,user:any}) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async jwt({ token, user }: { token: any; user: any }) {
       if (user) {
         token.id = user.id;
         token.role = user.role;
-        token.username =user.username;
+        token.username = user.username;
         token.name = user.name;
       }
       return token;
     },
-    async session({ session, token }:{session:any,token:any}) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async session({ session, token }: { session: any; token: any }) {
       if (token) {
         session.user.id = token.id;
         session.user.role = token.role;

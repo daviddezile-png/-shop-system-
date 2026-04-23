@@ -1,17 +1,26 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { PrismaClient } from "@/lib/generated/prisma";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const prisma = new PrismaClient();
   try {
-    // Get the start of the current day
-    const startOfDay = new Date();
+    // Get date parameters from URL
+    const url = new URL(req.url);
+    const startDate = url.searchParams.get("startDate");
+    const endDate = url.searchParams.get("endDate");
+
+    // Default to today if no dates provided
+    const startOfDay = startDate ? new Date(startDate) : new Date();
     startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = endDate ? new Date(endDate) : new Date();
+    endOfDay.setHours(23, 59, 59, 999);
 
     const sales = await prisma.sale.aggregate({
       where: {
         createdAt: {
           gte: startOfDay, // Greater than or equal to the start of the day
+          lte: endOfDay, // Less than or equal to the end of the day
         },
       },
       _sum: {
@@ -21,7 +30,10 @@ export async function GET() {
 
     const Loan = await prisma.loan.aggregate({
       where: {
-        createdAt: { gte: startOfDay },
+        createdAt: { 
+          gte: startOfDay,
+          lte: endOfDay,
+        },
       },
       _sum: {
         quantity: true, 

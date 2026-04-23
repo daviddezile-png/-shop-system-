@@ -87,7 +87,43 @@ const styles = StyleSheet.create({
   },
 });
 
-const SalesReportPDF = ({ data, startDate, endDate }: any) => (
+interface SalesData {
+  id: string;
+  productName: string;
+  quantity: number;
+  totalPrice: number;
+  paymentType: string;
+  createdAt: string;
+  customerName?: string;
+}
+
+interface PaymentMethods {
+  [key: string]: number;
+}
+
+interface ProductSummary {
+  quantity: number;
+  amount: number;
+  price: number;
+}
+
+interface ReportData {
+  total: number;
+  totalTransactions: number;
+  paymentMethods: PaymentMethods;
+  summary: { [productName: string]: ProductSummary };
+  topProducts: Array<{ name: string; amount: number }>;
+}
+
+const SalesReportPDF = ({
+  data,
+  startDate,
+  endDate,
+}: {
+  data: ReportData;
+  startDate: string;
+  endDate: string;
+}) => (
   <Document>
     <Page size="A4" style={styles.page}>
       <View style={styles.header}>
@@ -158,7 +194,7 @@ const SalesReportPDF = ({ data, startDate, endDate }: any) => (
           </Text>
           <View style={{ flexDirection: "row", gap: 10 }}>
             {Object.entries(data.paymentMethods).map(
-              ([method, amount]: any) => (
+              ([method, amount]: [string, number]) => (
                 <View
                   key={method}
                   style={{
@@ -193,23 +229,28 @@ const SalesReportPDF = ({ data, startDate, endDate }: any) => (
       </View>
 
       {/* Table Rows */}
-      {Object.entries(data?.summary || {}).map(([product, details]: any) => (
-        <View key={product} style={styles.tableRow}>
-          <Text
-            style={[styles.tableCell, { flex: 2, textTransform: "capitalize" }]}
-          >
-            {product}
-          </Text>
-          <Text style={[styles.tableCell, { textAlign: "center" }]}>
-            {details.quantity || 0}
-          </Text>
-          <Text style={[styles.tableCell, { textAlign: "right" }]}>
-            {Number(
-              typeof details === "number" ? details : details.amount || 0,
-            ).toLocaleString()}
-          </Text>
-        </View>
-      ))}
+      {Object.entries(data?.summary || {}).map(
+        ([product, details]: [string, ProductSummary]) => (
+          <View key={product} style={styles.tableRow}>
+            <Text
+              style={[
+                styles.tableCell,
+                { flex: 2, textTransform: "capitalize" },
+              ]}
+            >
+              {product}
+            </Text>
+            <Text style={[styles.tableCell, { textAlign: "center" }]}>
+              {details.quantity || 0}
+            </Text>
+            <Text style={[styles.tableCell, { textAlign: "right" }]}>
+              {Number(
+                typeof details === "number" ? details : details.amount || 0,
+              ).toLocaleString()}
+            </Text>
+          </View>
+        ),
+      )}
 
       {/* Top Performing Products */}
       {data?.topProducts && data.topProducts.length > 0 && (
@@ -224,12 +265,14 @@ const SalesReportPDF = ({ data, startDate, endDate }: any) => (
           <Text style={{ fontSize: 14, fontWeight: "bold", marginBottom: 10 }}>
             Top Performing Products
           </Text>
-          {data.topProducts.slice(0, 3).map((product: any, index: number) => (
-            <Text key={index} style={{ fontSize: 12, marginBottom: 2 }}>
-              {index + 1}. {product.name} -{" "}
-              {Number(product.amount).toLocaleString()} TZS
-            </Text>
-          ))}
+          {data.topProducts
+            .slice(0, 3)
+            .map((product: { name: string; amount: number }, index: number) => (
+              <Text key={index} style={{ fontSize: 12, marginBottom: 2 }}>
+                {index + 1}. {product.name} -{" "}
+                {Number(product.amount).toLocaleString()} TZS
+              </Text>
+            ))}
         </View>
       )}
 
@@ -269,9 +312,7 @@ const SalesReportPDF = ({ data, startDate, endDate }: any) => (
         </Text>
       </View>
 
-      <Text style={styles.footer}>
-           ## God bless you !
-      </Text>
+      <Text style={styles.footer}>## God bless you !</Text>
     </Page>
   </Document>
 );
@@ -280,7 +321,7 @@ const SalesReportPDF = ({ data, startDate, endDate }: any) => (
 export default function ReportsPage() {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<ReportData | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -406,12 +447,12 @@ export default function ReportsPage() {
                 document={
                   <SalesReportPDF
                     data={data}
-                    startDate={startDate}
-                    endDate={endDate}
+                    startDate={startDate?.toISOString() || ""}
+                    endDate={endDate?.toISOString() || ""}
                   />
                 }
-                fileName={`sales-report_${format(startDate!, "yyyy-MM-dd")}_to_${format(
-                  endDate!,
+                fileName={`sales-report_${format(startDate || new Date(), "yyyy-MM-dd")}_to_${format(
+                  endDate || new Date(),
                   "yyyy-MM-dd",
                 )}.pdf`}
               >
@@ -453,34 +494,36 @@ export default function ReportsPage() {
               </tr>
             </thead>
             <tbody>
-              {Object.entries(data.summary || {}).map(
-                ([product, details]: any) => (
-                  <tr
-                    key={product}
-                    className="border-b dark:border-gray-700 last:border-0 hover:bg-slate-50 dark:hover:bg-gray-700"
-                  >
-                    <td className="p-6 capitalize font-medium">{product}</td>
-                    <td className="p-6 text-center font-mono">
-                      {details.quantity || 0}
-                    </td>
-                    <td className="p-6 text-right font-mono">
-                      {Number(
-                        typeof details === "number"
-                          ? details
-                          : details.amount || 0,
-                      ).toLocaleString()}{" "}
-                      TZS
-                    </td>
-                  </tr>
-                ),
-              )}
+              {Object.entries(
+                data.summary || ({} as { [key: string]: ProductSummary }),
+              ).map(([product, details]: [string, ProductSummary]) => (
+                <tr
+                  key={product}
+                  className="border-b dark:border-gray-700 last:border-0 hover:bg-slate-50 dark:hover:bg-gray-700"
+                >
+                  <td className="p-6 capitalize font-medium">{product}</td>
+                  <td className="p-6 text-center font-mono">
+                    {details.quantity || 0}
+                  </td>
+                  <td className="p-6 text-right font-mono">
+                    {Number(
+                      typeof details === "number"
+                        ? details
+                        : details.amount || 0,
+                    ).toLocaleString()}{" "}
+                    TZS
+                  </td>
+                </tr>
+              ))}
             </tbody>
             <tfoot className="bg-slate-50 dark:bg-gray-700">
               <tr>
                 <td className="p-6 font-bold text-lg">GRAND TOTAL</td>
                 <td className="p-6 text-center font-bold text-lg">
-                  {Object.values(data.summary || {}).reduce(
-                    (sum: number, details: any) =>
+                  {Object.values(
+                    data.summary || ({} as { [key: string]: ProductSummary }),
+                  ).reduce(
+                    (sum: number, details: ProductSummary) =>
                       sum + (details.quantity || 0),
                     0,
                   )}
@@ -508,8 +551,8 @@ export default function ReportsPage() {
             <PDFViewer width="100%" height="100%" className="flex-1">
               <SalesReportPDF
                 data={data}
-                startDate={startDate}
-                endDate={endDate}
+                startDate={startDate?.toISOString() || ""}
+                endDate={endDate?.toISOString() || ""}
               />
             </PDFViewer>
           </div>
