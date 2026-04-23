@@ -1,11 +1,30 @@
 import { PaymentStatus, PaymentType, PrismaClient } from "@/lib/generated/prisma";
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 
 const prisma = new PrismaClient();
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const url = new URL(req.url);
+    const startDate = url.searchParams.get("startDate");
+    const endDate = url.searchParams.get("endDate");
+
+    const whereClause: any = {};
+    
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        whereClause.createdAt = {
+          gte: start,
+          lte: end,
+        };
+      }
+    }
+
     const loans = await prisma.loan.findMany({
+      where: whereClause,
       include:{
         product:{
             select:{

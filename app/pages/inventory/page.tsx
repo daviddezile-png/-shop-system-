@@ -1,5 +1,5 @@
-'use client';
-import * as React from 'react';
+"use client";
+import * as React from "react";
 import {
   ColumnDef,
   flexRender,
@@ -10,9 +10,9 @@ import {
   getFilteredRowModel,
   ColumnFiltersState,
   SortingState,
-} from '@tanstack/react-table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+} from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -20,7 +20,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -28,11 +28,11 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import Loader from '@/components/Loader';
-import { MinusCircle, PenBox } from 'lucide-react';
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import Loader from "@/components/Loader";
+import { MinusCircle, PenBox } from "lucide-react";
 
 // Define the Product type with `availableQuantity`
 export type Product = {
@@ -46,7 +46,15 @@ export type Product = {
 };
 
 // Reusable component for the update stock button and dialog
-const UpdateStockButton = ({ productId, currentQuantity, onUpdate }:{productId:string,currentQuantity:number, onUpdate: () => void}) => {
+const UpdateStockButton = ({
+  productId,
+  currentQuantity,
+  onUpdate,
+}: {
+  productId: string;
+  currentQuantity: number;
+  onUpdate: () => void;
+}) => {
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [quantityToAdd, setQuantityToAdd] = React.useState(0);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -55,22 +63,22 @@ const UpdateStockButton = ({ productId, currentQuantity, onUpdate }:{productId:s
     setIsLoading(true);
     try {
       const response = await fetch(`/api/inventory/${productId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ quantityToAdd }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update inventory');
+        throw new Error("Failed to update inventory");
       }
 
-      toast.success('Inventory updated successfully!');
+      toast.success("Inventory updated successfully!");
       setIsDialogOpen(false);
       onUpdate(); // Call the callback to trigger a data re-fetch
     } catch (error) {
-      toast.error('Failed to update inventory.');
+      toast.error("Failed to update inventory.");
     } finally {
       setIsLoading(false);
     }
@@ -78,8 +86,8 @@ const UpdateStockButton = ({ productId, currentQuantity, onUpdate }:{productId:s
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <Button onClick={() => setIsDialogOpen(true)}  size="sm">
-        <PenBox className='text-lime-400'/> Add Stock
+      <Button onClick={() => setIsDialogOpen(true)} size="sm">
+        <PenBox className="blue-lime-800" /> Add Stock
       </Button>
       <DialogContent>
         <DialogHeader>
@@ -99,7 +107,153 @@ const UpdateStockButton = ({ productId, currentQuantity, onUpdate }:{productId:s
         </div>
         <DialogFooter>
           <Button onClick={handleUpdateStock} disabled={isLoading}>
-            {isLoading ? <Loader/> : 'Add to Stock'}
+            {isLoading ? <Loader /> : "Add to Stock"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Reusable component for the edit product button and dialog
+const EditInventoryButton = ({
+  product,
+  onUpdate,
+}: {
+  product: Product;
+  onUpdate: () => void;
+}) => {
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [editedProduct, setEditedProduct] = React.useState({
+    name: product?.name || "",
+    buyingPrice: product?.buyingPrice?.toString() || "",
+    sellingPrice: product?.sellingPrice?.toString() || "",
+    category: product?.category || "",
+    scale: product?.scale || "",
+  });
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const handleEditProduct = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/inventory/${product.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: editedProduct.name,
+          buyingPrice: parseFloat(editedProduct.buyingPrice),
+          sellingPrice: parseFloat(editedProduct.sellingPrice),
+          category: editedProduct.category,
+          scale: editedProduct.scale,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update product details.");
+      }
+
+      toast.success("Product details updated successfully!");
+      setIsDialogOpen(false);
+      onUpdate(); // Call the callback to trigger a data re-fetch
+    } catch (error) {
+      toast.error("Failed to update product details.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Button onClick={() => setIsDialogOpen(true)} variant="outline" size="sm">
+        <PenBox className="text-blue-400" /> Edit
+      </Button>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Edit Product</DialogTitle>
+          <DialogDescription>
+            Make changes to your product here. Click save when you're done.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="name" className="text-right">
+              Name
+            </Label>
+            <Input
+              id="name"
+              value={editedProduct.name}
+              onChange={(e) =>
+                setEditedProduct({ ...editedProduct, name: e.target.value })
+              }
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="buyingPrice" className="text-right">
+              Buying Price
+            </Label>
+            <Input
+              id="buyingPrice"
+              type="text"
+              value={editedProduct.buyingPrice}
+              onChange={(e) =>
+                setEditedProduct({
+                  ...editedProduct,
+                  buyingPrice: e.target.value,
+                })
+              }
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="sellingPrice" className="text-right">
+              Selling Price
+            </Label>
+            <Input
+              id="sellingPrice"
+              type="text"
+              value={editedProduct.sellingPrice}
+              onChange={(e) =>
+                setEditedProduct({
+                  ...editedProduct,
+                  sellingPrice: e.target.value,
+                })
+              }
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="category" className="text-right">
+              Category
+            </Label>
+            <Input
+              id="category"
+              value={editedProduct.category}
+              onChange={(e) =>
+                setEditedProduct({ ...editedProduct, category: e.target.value })
+              }
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="scale" className="text-right">
+              Scale
+            </Label>
+            <Input
+              id="scale"
+              value={editedProduct.scale}
+              onChange={(e) =>
+                setEditedProduct({ ...editedProduct, scale: e.target.value })
+              }
+              className="col-span-3"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={handleEditProduct} disabled={isLoading}>
+            {isLoading ? <Loader /> : "Save Changes"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -112,19 +266,21 @@ export default function InventoryDataTable() {
   const [data, setData] = React.useState<Product[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    [],
+  );
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/inventory/list');
+      const response = await fetch("/api/inventory/list");
       if (!response.ok) {
-        throw new Error('Failed to fetch data');
+        throw new Error("Failed to fetch data");
       }
       const products: Product[] = await response.json();
       setData(products);
     } catch (error) {
-      toast.error('Failed to fetch inventory data.');
+      toast.error("Failed to fetch inventory data.");
     } finally {
       setLoading(false);
     }
@@ -134,39 +290,45 @@ export default function InventoryDataTable() {
     fetchData();
   }, []);
 
-  const columns: ColumnDef<Product>[] = React.useMemo(() => [
-    {
-      accessorKey: 'sn',
-      header: 'S/N',
-      cell: ({ row }) => row.index + 1,
-    },
-    {
-      accessorKey: 'name',
-      header: 'Product Name',
-    },
-    {
-      accessorKey: 'availableQuantity',
-      header: 'Available Quantity',
-      cell: ({ row }) => {
-        const product = row.original;
-        return `${product.availableQuantity} ${product.scale}`;
+  const columns: ColumnDef<Product>[] = React.useMemo(
+    () => [
+      {
+        accessorKey: "sn",
+        header: "S/N",
+        cell: ({ row }) => row.index + 1,
       },
-    },
-    {
-      id: 'actions',
-      header: 'Actions',
-      cell: ({ row }) => {
-        const product = row.original;
-        return (
-          <UpdateStockButton 
-            productId={product.id} 
-            currentQuantity={product.availableQuantity} 
-            onUpdate={fetchData} // Pass the re-fetch function as a prop
-          />
-        );
+      {
+        accessorKey: "name",
+        header: "Product Name",
       },
-    },
-  ], [fetchData]);
+      {
+        accessorKey: "availableQuantity",
+        header: "Available Quantity",
+        cell: ({ row }) => {
+          const product = row.original;
+          return `${product.availableQuantity} ${product.scale}`;
+        },
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const product = row.original;
+          return (
+            <div className="flex items-center gap-2">
+              <EditInventoryButton product={product} onUpdate={fetchData} />
+              <UpdateStockButton
+                productId={product.id}
+                currentQuantity={product.availableQuantity}
+                onUpdate={fetchData} // Pass the re-fetch function as a prop
+              />
+            </div>
+          );
+        },
+      },
+    ],
+    [fetchData],
+  );
 
   const table = useReactTable({
     data,
@@ -183,21 +345,23 @@ export default function InventoryDataTable() {
     },
   });
 
- if (loading) {
-  return (
-    <div className="flex justify-center items-center min-h-screen">
-      <Loader />
-    </div>
-  );
-}
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
-      <h2 className='font-extrabold py-3 p-1 text-xl font-mono'>Inventory</h2>
+      <h2 className="font-extrabold py-3 p-1 text-xl font-mono">Inventory</h2>
       <Input
         placeholder="Filter products..."
-        value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
-        onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
+        value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+        onChange={(event) =>
+          table.getColumn("name")?.setFilterValue(event.target.value)
+        }
         className="max-w-sm p-2"
       />
       <div className="rounded-md border mt-4">
@@ -207,7 +371,10 @@ export default function InventoryDataTable() {
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
-                    {flexRender(header.column.columnDef.header, header.getContext())}
+                    {flexRender(
+                      header.column.columnDef.header,
+                      header.getContext(),
+                    )}
                   </TableHead>
                 ))}
               </TableRow>
@@ -219,14 +386,20 @@ export default function InventoryDataTable() {
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   No inventory data available.
                 </TableCell>
               </TableRow>

@@ -4,7 +4,11 @@ import React, { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import {
   ResponsiveContainer,
@@ -15,7 +19,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from "recharts";
-import Loader from '@/components/Loader'
+import Loader from "@/components/Loader";
 
 export default function WeeklySalesTrends() {
   const [monthDate, setMonthDate] = useState<Date | undefined>(new Date());
@@ -32,7 +36,9 @@ export default function WeeklySalesTrends() {
       setLoading(true);
       try {
         const monthStr = format(monthDate, "yyyy-MM");
-        const res = await fetch(`/api/sales/trends?month=${encodeURIComponent(monthStr)}`);
+        const res = await fetch(
+          `/api/sales/trends?month=${encodeURIComponent(monthStr)}`,
+        );
         const json = await res.json();
 
         if (!res.ok) {
@@ -75,18 +81,26 @@ export default function WeeklySalesTrends() {
       <div className="flex items-center gap-3 mb-4">
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline">{monthDate ? format(monthDate, "MMMM yyyy") : "Pick month"}</Button>
+            <Button variant="outline">
+              {monthDate ? format(monthDate, "MMMM yyyy") : "Pick month"}
+            </Button>
           </PopoverTrigger>
           <PopoverContent className="w-auto p-0">
             {/* Calendar will allow month selection; user can pick any date in target month */}
-            <Calendar mode="single" selected={monthDate ?? undefined} onSelect={setMonthDate} />
+            <Calendar
+              mode="single"
+              selected={monthDate ?? undefined}
+              onSelect={setMonthDate}
+            />
           </PopoverContent>
         </Popover>
       </div>
 
-      <div className="h-[400px]">
+      <div className="h-[300px] w-full">
         {loading ? (
-          <div className="flex items-center justify-center h-full"><Loader/></div>
+          <div className="flex items-center justify-center h-full">
+            <Loader />
+          </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={Array.isArray(data) ? data : []}>
@@ -94,7 +108,12 @@ export default function WeeklySalesTrends() {
               <XAxis dataKey="weekLabel" />
               <YAxis />
               <Tooltip />
-              <Line type="monotone" dataKey="income" stroke="#2563eb" strokeWidth={2} />
+              <Line
+                type="monotone"
+                dataKey="income"
+                stroke="#2563eb"
+                strokeWidth={2}
+              />
             </LineChart>
           </ResponsiveContainer>
         )}

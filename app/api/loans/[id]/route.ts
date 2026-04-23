@@ -12,13 +12,27 @@ export async function PUT(
   const { id } = await params;
 
   try {
-    const { paymentStatus } = await req.json();
+    const { 
+      paymentStatus, 
+      customerName, 
+      phone, 
+      quantity, 
+      paymentType,
+      productId 
+    } = await req.json();
+
+    const updateData: any = {};
+    
+    if (paymentStatus !== undefined) updateData.paymentStatus = paymentStatus;
+    if (customerName !== undefined) updateData.customerName = customerName;
+    if (phone !== undefined) updateData.phone = phone;
+    if (quantity !== undefined) updateData.quantity = parseInt(quantity);
+    if (paymentType !== undefined) updateData.paymentType = paymentType;
+    if (productId !== undefined) updateData.productId = productId;
 
     const updatedLoan = await prisma.loan.update({
       where: { id },
-      data: {
-        paymentStatus,
-      },
+      data: updateData,
     });
 
     return NextResponse.json(updatedLoan, { status: 200 });

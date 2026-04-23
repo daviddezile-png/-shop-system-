@@ -29,6 +29,7 @@ export async function GET() {
       totalPrice: sale.totalPrice,
       paymentType: sale.paymentType,
       soldBy: sale.soldBy.name,
+      createdAt: sale.createdAt,
     }));
 
     return NextResponse.json(formattedSales, { status: 200 });

@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import * as React from "react";
 import {
   Dialog,
@@ -9,8 +9,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -23,7 +23,7 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table";
-import { ChevronDown, MinusCircle, PlusCircle } from "lucide-react";
+import { ChevronDown, MinusCircle, PlusCircle, Pencil, Trash, TriangleDashed, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -42,8 +42,157 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import Loader from '@/components/Loader';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import Loader from "@/components/Loader";
+
+// Edit User Button Component
+const EditUserButton = ({
+  user,
+  onUpdate,
+}: {
+  user: user;
+  onUpdate: () => void;
+}) => {
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [editedUser, setEditedUser] = React.useState({
+    username: user.username,
+    role: user.role,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+  });
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const handleUpdateUser = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`/api/users/${user.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(editedUser),
+      });
+
+      if (response.ok) {
+        toast.success("User updated successfully!");
+        setIsDialogOpen(false);
+        onUpdate();
+      } else {
+        toast.error("Failed to update user");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to update user");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = event.target;
+    setEditedUser({
+      ...editedUser,
+      [name]: value,
+    });
+  };
+
+  return (
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Button
+        onClick={() => setIsDialogOpen(true)}
+        variant="outline"
+        size="icon"
+        className="text-blue-500 hover:text-blue-700"
+      >
+        <Pencil className="h-4 w-4" />
+      </Button>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Edit User</DialogTitle>
+          <DialogDescription>
+            Update the user details for {user.name}.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="editName">Name</Label>
+            <Input
+              id="editName"
+              name="name"
+              value={editedUser.name}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="editUsername">Username</Label>
+            <Input
+              id="editUsername"
+              name="username"
+              value={editedUser.username}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="editEmail">Email</Label>
+            <Input
+              id="editEmail"
+              name="email"
+              type="email"
+              value={editedUser.email}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="editPhone">Phone</Label>
+            <Input
+              id="editPhone"
+              name="phone"
+              value={editedUser.phone}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="editRole">Role</Label>
+            <Select
+              value={editedUser.role}
+              onValueChange={(value) =>
+                setEditedUser({ ...editedUser, role: value })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ADMIN">ADMIN/OWNER</SelectItem>
+                <SelectItem value="STAFF">STAFF/MANAGER</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button onClick={handleUpdateUser} disabled={isLoading}>
+            {isLoading ? "Updating..." : "Update User"}
+          </Button>
+          <DialogClose asChild>
+            <Button type="button" variant="outline">
+              Cancel
+            </Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
 export type user = {
   id: string;
   username: string;
@@ -54,29 +203,8 @@ export type user = {
   phone: string;
 };
 
-export const columns: ColumnDef<user>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+// Columns definition - function to get columns with refresh callback
+const getColumns = (onRefresh: () => void): ColumnDef<user>[] => [
   {
     accessorKey: "name",
     header: "Name",
@@ -114,16 +242,16 @@ export const columns: ColumnDef<user>[] = [
             setOpen(false);
             const fetchUsers = async () => {
               try {
-                const response = await fetch('/api/users/list');
+                const response = await fetch("/api/users/list");
                 if (response.ok) {
                   const data = await response.json();
                   setUsers(data);
                 } else {
-                  toast.error('Failed to fetch users');
+                  toast.error("Failed to fetch users");
                 }
               } catch (error) {
                 console.error(error);
-                toast.error('Failed to fetch users');
+                toast.error("Failed to fetch users");
               }
             };
             fetchUsers();
@@ -137,11 +265,12 @@ export const columns: ColumnDef<user>[] = [
         }
       };
       return (
-        <>
-          <Button onClick={() => handleDeleteUser(user.id)}>
-            <MinusCircle className="text-red-600"/> Remove
+        <div className="flex items-center gap-2">
+          <EditUserButton user={user} onUpdate={onRefresh} />
+          <Button variant="outline" onClick={() => handleDeleteUser(user.id)}>
+            <Trash2 className="text-red-700"/>
           </Button>
-        </>
+        </div>
       );
     },
   },
@@ -149,36 +278,57 @@ export const columns: ColumnDef<user>[] = [
 
 export default function DataTableDemo() {
   const [sorting, setSorting] = React.useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    [],
+  );
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
   const [users, setUsers] = React.useState<user[]>([]);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [newUser, setNewUser] = React.useState({
-    username: '',
-    password: '',
-    role: '',
-    name: '',
-    email: '',
-    phone: '',
+    username: "",
+    password: "",
+    role: "",
+    name: "",
+    email: "",
+    phone: "",
   });
-const [loading,setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(true);
+
+  // Refresh function
+  const refreshUsers = async () => {
+    try {
+      const response = await fetch("/api/users/list");
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data);
+      } else {
+        toast.error("Failed to fetch users");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch users");
+    }
+  };
+
   React.useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await fetch('/api/users/list');
+        const response = await fetch("/api/users/list");
         if (response.ok) {
           const data = await response.json();
           setUsers(data);
-          { users.length === 0 ? null : toast.error("No User available!") }
+          {
+            users.length === 0 ? null : toast.error("No User available!");
+          }
         } else {
-          toast.error('Failed to fetch users');
+          toast.error("Failed to fetch users");
         }
       } catch (error) {
         console.error(error);
-        toast.error('Failed to fetch users');
-      }
-      finally{
+        toast.error("Failed to fetch users");
+      } finally {
         setLoading(false);
       }
     };
@@ -187,7 +337,7 @@ const [loading,setLoading] = React.useState(true);
 
   const table = useReactTable({
     data: users,
-    columns,
+    columns: getColumns(refreshUsers),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -208,38 +358,38 @@ const [loading,setLoading] = React.useState(true);
     event.preventDefault();
     try {
       // The newUser state already holds the correct role value.
-      const response = await fetch('/api/users/create', {
-        method: 'POST',
+      const response = await fetch("/api/users/create", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(newUser),
       });
 
       if (response.ok) {
-        toast.success('User created successfully');
+        toast.success("User created successfully");
         setIsDialogOpen(false);
         const fetchUsers = async () => {
           try {
-            const response = await fetch('/api/users/list');
+            const response = await fetch("/api/users/list");
             if (response.ok) {
               const data = await response.json();
               setUsers(data);
             } else {
-              toast.error('Failed to fetch users');
+              toast.error("Failed to fetch users");
             }
           } catch (error) {
             console.error(error);
-            toast.error('Failed to fetch users');
+            toast.error("Failed to fetch users");
           }
         };
         fetchUsers();
       } else {
-        toast.error('Failed to create user');
+        toast.error("Failed to create user");
       }
     } catch (error) {
       console.error(error);
-      toast.error('Failed to create user');
+      toast.error("Failed to create user");
     }
   };
 
@@ -250,18 +400,19 @@ const [loading,setLoading] = React.useState(true);
       [name]: value,
     });
   };
- if (loading) {
-  return (
-    <div className="flex justify-center items-center min-h-screen">
-      <Loader />
-    </div>
-  );
-}
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <Loader />
+      </div>
+    );
+  }
   return (
     <div className="w-full">
-      <h2 className='font-extrabold p-2 text-xl font-mono'>Users</h2>
-      <div className="flex items-center pb-4">
-        <Input
+      <h2 className="font-extrabold p-2 text-xl font-mono">Users</h2>
+      <div className="flex  flex-wrap items-center pb-4">
+        <div className="flex flex-row">
+           <Input
           placeholder="Filter names..."
           value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
@@ -271,16 +422,20 @@ const [loading,setLoading] = React.useState(true);
         />
         <Input
           placeholder="Filter Username..."
-          value={(table.getColumn("username")?.getFilterValue() as string) ?? ""}
+          value={
+            (table.getColumn("username")?.getFilterValue() as string) ?? ""
+          }
           onChange={(event) =>
             table.getColumn("username")?.setFilterValue(event.target.value)
           }
           className="max-w-sm ml-2"
         />
+        </div>
+       
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="m-5">
-              <PlusCircle className="text-lime-300" />
+            <Button className="m-5 ">
+              <PlusCircle className="text-lime-800" />
               New User
             </Button>
           </DialogTrigger>
@@ -316,7 +471,9 @@ const [loading,setLoading] = React.useState(true);
                   {/* The corrected Select component with id and name */}
                   <Select
                     name="role"
-                    onValueChange={(value) => setNewUser({ ...newUser, role: value })}
+                    onValueChange={(value) =>
+                      setNewUser({ ...newUser, role: value })
+                    }
                   >
                     <SelectTrigger id="role" className="w-[190px]">
                       <SelectValue placeholder="select User Role" />
@@ -324,8 +481,8 @@ const [loading,setLoading] = React.useState(true);
                     <SelectContent>
                       <SelectGroup>
                         <SelectLabel>Roles</SelectLabel>
-                        <SelectItem value="ADMIN"> ADMIN</SelectItem>
-                        <SelectItem value="STAFF">STAFF</SelectItem>
+                        <SelectItem value="ADMIN">ADMIN/OWNER</SelectItem>
+                        <SelectItem value="STAFF">STAFF/MANAGER</SelectItem>
                       </SelectGroup>
                     </SelectContent>
                   </Select>
@@ -406,7 +563,7 @@ const [loading,setLoading] = React.useState(true);
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </TableHead>
                   );
@@ -425,7 +582,7 @@ const [loading,setLoading] = React.useState(true);
                     <TableCell key={cell.id}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </TableCell>
                   ))}
@@ -434,7 +591,7 @@ const [loading,setLoading] = React.useState(true);
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={table.getAllColumns().length}
                   className="h-24 text-center"
                 >
                   No results.
