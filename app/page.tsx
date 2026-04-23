@@ -89,7 +89,7 @@ export default function SignInPage() {
                   placeholder="Enter your username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="pl-10 h-12 bg-gray-50/50 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-blue-500/20 transition-all"
+                  className="pl-10 h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-500 rounded-xl focus:border-blue-500 focus:ring-blue-500/20 transition-all"
                   required
                 />
               </div>
@@ -112,7 +112,7 @@ export default function SignInPage() {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-12 h-12 bg-gray-50/50 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-blue-500/20 transition-all"
+                  className="pl-10 pr-12 h-12 bg-white border-gray-200 text-gray-900 placeholder:text-gray-500 rounded-xl focus:border-blue-500 focus:ring-blue-500/20 transition-all"
                   required
                 />
                 <button
