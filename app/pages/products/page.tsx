@@ -270,19 +270,13 @@ const getColumns = (
 
   {
     id: "actions",
+    header: "Actions",
     enableHiding: false,
     cell: ({ row }) => {
       const product = row.original;
       return (
         <div className="flex items-center gap-2">
           <EditProductButton product={product} onUpdate={onRefresh} />
-          <Button
-            variant="outline"
-            onClick={() => handleDeleteProduct(product.id)}
-            className="text-red-500 hover:text-red-700"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
         </div>
       );
     },
@@ -308,30 +302,28 @@ export default function DataTableDemo() {
     scale: "",
   });
 
-  React.useEffect(() => {
-    // Fetch products from the API
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch("/api/products/list");
-        if (response.ok) {
-          const data = await response.json();
-          setProducts(data);
-          {
-            products.length === 0
-              ? null
-              : toast.error("No product available !");
-          }
-        } else {
-          toast.error("Failed to fetch products");
+  // Fetch products from the API
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch("/api/products/list");
+      if (response.ok) {
+        const data = await response.json();
+        setProducts(data);
+        {
+          products.length === 0 ? null : toast.error("No product available !");
         }
-      } catch (error) {
-        console.error(error);
+      } else {
         toast.error("Failed to fetch products");
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to fetch products");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  React.useEffect(() => {
     fetchProducts();
   }, []);
 

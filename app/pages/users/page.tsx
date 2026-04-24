@@ -272,9 +272,8 @@ export default function DataTableDemo() {
       if (response.ok) {
         const data = await response.json();
         setUsers(data);
-      } else {
-        toast.error("Failed to fetch users");
-      }
+        toast.success("Users fetched successfully");
+      } 
     } catch (error) {
       console.error(error);
       toast.error("Failed to fetch users");
@@ -305,9 +304,6 @@ export default function DataTableDemo() {
         if (response.ok) {
           const data = await response.json();
           setUsers(data);
-          {
-            users.length === 0 ? null : toast.error("No User available!");
-          }
         } else {
           toast.error("Failed to fetch users");
         }
@@ -491,7 +487,7 @@ export default function DataTableDemo() {
                     onChange={handleInputChange}
                   />
                 </div>
-                <div className="grid gap-3">
+                <div className="grid gap-3 mb-3">
                   <Label htmlFor="phone">User Phone number</Label>
                   <Input
                     id="phone"

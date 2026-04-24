@@ -86,9 +86,7 @@ const Dashboard = () => {
       const endISO = new Date(endOfDay).toISOString();
 
       // Fetch data for the selected date range
-      const productsResponse = await fetch(
-        `/api/products/list?startDate=${startISO}&endDate=${endISO}`,
-      );
+      const productsResponse = await fetch(`/api/products/list`);
       const loansResponse = await fetch(
         `/api/loans/list?startDate=${startISO}&endDate=${endISO}`,
       );
@@ -113,7 +111,7 @@ const Dashboard = () => {
         setProducts(productsData);
         setLoans(loansData);
         setTotal(incomeData.total);
-        setSoldProducts(soldProductData);
+        setSoldProducts(soldProductData.count || 0);
       } else {
         toast.error("Failed to refresh data");
       }
@@ -236,7 +234,7 @@ const Dashboard = () => {
                 )}
               </CardAction>
               <CardTitle className="text-2xl sm:text-3xl">
-                {soldProducts.length}
+                {soldProducts}
               </CardTitle>
               <CardDescription className="text-sm text-lime-100">
                 Products Sold
